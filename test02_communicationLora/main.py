@@ -104,7 +104,7 @@ lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 # Creez des parametres d'authentification OTAA. Remplacez-les par les informations presentes sur TTN
 # A MODIFIER EN FONCTION DE VOS DONNEES TTN
-app_eui = ubinascii.unhexlify('FFFFFFFFFFFFFFFF')
+join_eui = ubinascii.unhexlify('FFFFFFFFFFFFFFFF')
 app_key = ubinascii.unhexlify('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
 dev_eui = ubinascii.unhexlify('FFFFFFFFFFFFFFFF')
 
@@ -147,7 +147,7 @@ lora.callback(trigger=(LoRa.RX_PACKET_EVENT | LoRa.TX_PACKET_EVENT), handler=lor
 
 
 #Démarrate de la connexion avec le server Lora
-lora.join(activation=LoRa.OTAA, auth=(dev_eui, app_eui, app_key), timeout=0)
+lora.join(activation=LoRa.OTAA, auth=(dev_eui, join_eui, app_key), timeout=0)
 
 #Attente de la connexion
 while not lora.has_joined():
@@ -188,5 +188,6 @@ while 1 :
 #####################################################
 ## FIN
 ######################################################
+
 
 
