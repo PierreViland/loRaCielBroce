@@ -3,142 +3,97 @@ import sys
 import logging
 import paho.mqtt.client as mqtt
 import json
-import csv
-import random
 import datetime
 import mysql.connector
+import random
 
-USER = "_____________________"
-PASSWORD = "__________________________________________________________________________________________________"
-PUBLIC_TLS_ADDRESS = "___________________________"
-PUBLIC_TLS_ADDRESS_PORT = 8883
-DEVICE_ID = "____________________"
-ALL_DEVICES = True
+# --- Configuration ---
+BROKER_ADDRESS = "192.1__________"  # MQTT non sécurisé sur port 1883
+BROKER_PORT = 1883
+QOS = 0  # Qualité de service
 
-test= 0
-# Meaning Quality of Service (QoS)
-# QoS = 0 - at most once
-# QoS = 1 - at least once
-# QoS = 2 - exactly once
+DEVICE_TOPIC = "application/ee1__________71f9/device/678________59c/event/up"
 
 
-QOS = 0
+# Base de données MySQL
+#conn = mysql.connector.connect(
+#     host="192.________",
+#     user="____",
+#     password="_____",
+#    database="_________"
+#)
+#cursor = conn.cursor()
 
-#conn = mysql.connector.connect(host="___",
-#                                  user="___",
-#                                  password="___",
-#                                  database="_____")
-
-cursor = conn.cursor()
-
-
-
+# --- Fonctions utilitaires ---
 def stop(client):
     client.disconnect()
     print("\nFin")
     sys.exit(0)
 
-
-
-#Fonction callback lorsque le client recoit en ACK du server
-def on_connect(client, userdata, flags, rc):
+# --- Callbacks adaptés Paho 2.x ---
+def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("\nConnexion OK avec le MQTT broker")
     else:
-        print("\nFErreur de connexion = " + str(rc))
+        print("\nErreur de connexion = " + str(rc))
 
-
-#Fonction callback quand le server diffuse une info
 def on_message(client, userdata, message):
-    print("\nMessage recu de l'abonnement '" + message.topic + "' avec QoS = " + str(message.qos))
-
-    global test
-    test = json.loads(message.payload)
-    parsed_json = json.loads(message.payload)
-    print("Payload brut: ")
-    print( json.dumps(parsed_json, indent=4))
-    
-    if "uplink_message" in parsed_json:
-        temp_max     = parsed_json['uplink_message']['decoded_payload']['temperature_1']
-        temp_min    = parsed_json['uplink_message']['decoded_payload']['temperature_2']
-        id_gateway   = parsed_json['uplink_message']['rx_metadata'][0]['gateway_ids']['gateway_id']
-        rssi         = parsed_json['uplink_message']['rx_metadata'][0]['rssi']
-        timep = datetime.datetime.now() 
+    print(f"\nMessage reçu du topic '{message.topic}' avec QoS={message.qos}")
+    try:
+        parsed_json = json.loads(message.payload)
+        print("Payload brut:\n", json.dumps(parsed_json, indent=4))
         
-        prtin("Data Reçu.")
-        print(temp_min)
-        print(temp_max)
-        print(id_gateway)
-        print(rssi)
-        print(timep)
-    
-        #sql = "INSERT INTO mesures_device1 (ID, ____, ___, _____, ___, ___) VALUES (NULL, %s, %s, %s, %s, %s)"
-        #val = (str(____), str(____), str(____), str(____), str(____) )
-        #cursor.execute(sql, val)
-        #conn.commit()
-    else :
-        print("Pas de bonne donnees")
-   
-#Subsription a un abonndment MQTT.
-def on_subscribe(client, userdata, mid, granted_qos):
-    print("\nSouscription au abonnement " + str(mid) + " avec QoS = " + str(granted_qos))
+        if "object" in parsed_json:
+            temp_max = parsed_json['object']['temperatureSensor'].get('1')
+            temp_min = parsed_json['object']['temperatureSensor'].get('2')
 
-#Deabonnement
-def on_disconnect(client, userdata, rc):
-    print("\nDeconnexion du broker = " + str(rc))
-
-#Affichage log
-def on_log(client, userdata, level, buf):
-    print("\nLog: " + buf)
-    logging_level = client.LOGGING_LEVEL[level]
-    logging.log(logging_level, buf)
+            # rxInfo est une liste, on prend le premier élément
+            first_rx = parsed_json['rxInfo'][0]  # [0] pour accéder au premier dictionnaire
+            id_gateway = first_rx.get('gatewayId')
+            rssi = first_rx.get('rssi')
+            
 
 
-# Gene ID client
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
+            timep = datetime.datetime.now()
+            id_device = parsed_json['deviceInfo'].get('devEui')
+            print(f"Temp min: {temp_min}, Temp max: {temp_max}")
+            print(f"Temp min: {temp_min}, Temp max: {temp_max}")
+            print(f"Id device: {id_device}")
+            #sql = "INSERT INTO Mesure (id_mesure, temp_min, ____________________________________"
 
-print("Create new mqtt client instance")
-mqttc = mqtt.Client(client_id)
+            # val = (str(________), ___________________________________)
+            #cursor.execute(sql, val)
+            #conn.commit()
+        else:
+            print("Pas de bonnes données")
+    except Exception as e:
+        print("Erreur traitement message:", e)
 
-#Assignation des fonctions de rappel 'callback fct'
+def on_subscribe(client, userdata, mid, granted_qos, properties=None):
+    print(f"\nSouscription au topic {mid} avec QoS={granted_qos}")
+
+def on_disconnect(client, userdata, rc, properties=None):
+    print(f"\nDéconnexion du broker, rc={rc}")
+
+# --- Création du client ---
+client_id = f'python-mqtt-{random.randint(0,1000)}'
+mqttc = mqtt.Client(client_id=client_id)
+
+# Assignation des callbacks
 mqttc.on_connect = on_connect
-mqttc.on_subscribe = on_subscribe
 mqttc.on_message = on_message
+mqttc.on_subscribe = on_subscribe
 mqttc.on_disconnect = on_disconnect
-# mqttc.on_log = on_log  # Logging for debugging OK, waste
 
+# Connexion au broker non sécurisé
+mqttc.connect(BROKER_ADDRESS, BROKER_PORT, 60)
+mqttc.subscribe(DEVICE_TOPIC, QOS)
 
-print("Configuration  broker: " + PUBLIC_TLS_ADDRESS + ":" + str(PUBLIC_TLS_ADDRESS_PORT))
-mqttc.username_pw_set(USER, PASSWORD)
-mqttc.tls_set()
-mqttc.connect(PUBLIC_TLS_ADDRESS, PUBLIC_TLS_ADDRESS_PORT, 60)
-mqttc.subscribe("#", QOS)
-
-
-print("boucle infinie")
+# --- Boucle principale ---
+print("Boucle infinie MQTT...")
 try:
-    run = True
-    while run:
-        mqttc.loop(10)  # seconds timeout / blocking time
-        print(".", end="", flush=True)  # Affichage d'info pour montrer que le programme est 'en vie'
-        
-        #A LIRE  POUR LE DOWNLINK
-        #Exemple POUR ENVOYER UN MESSAGE au device
-        #hexadecimal_payload = '016700AD026700A6030101'
-        #fport = 3
-        #b64 = b64encode(bytes.fromhex(hexadecimal_payload)).decode()
-        #print('Convert hexadecimal_payload: ' + hexadecimal_payload + ' to base64: ' + b64)
-        #msg = '{"downlinks":[{"f_port":' + str(fport) + ',"frm_payload":"' + b64 + '","priority": "NORMAL"}]}'
-        #result = mqttc.publish(topic, msg, QOS)
-
-        # result: [0, 2]
-        #status = result[0]
-        #if status == 0:
-        #    print("Send " + msg + " to topic " + topic)
-        #else:
-        #    print("Failed to send message to topic " + topic)
-        #FIN DOWNLINK
-        
-        
+    while True:
+        mqttc.loop(10)  # Timeout 10s
+        print(".", end="", flush=True)
 except KeyboardInterrupt:
     stop(mqttc)
