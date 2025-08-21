@@ -31,6 +31,7 @@
                 <i><?php echo " Température min : " . $reponse_bdd['temp_min']; ?></i><br/>
                 <i><?php echo " Température max : " . $reponse_bdd['temp_max']; ?></i><br/><br/>
                 <i><?php echo " ID gateway : " . $reponse_bdd['id_gateway']; ?></i><br/>
+                <i><?php echo " ID Device : " . $reponse_bdd['id_device']; ?></i><br/><br/>
                 <i><?php echo " RSSI : " . $reponse_bdd['RSSI']; ?></i><br/><br/>
                 <div><?php echo " Date : " . $reponse_bdd['timep']; ?></div>
                 <hr/>
@@ -45,3 +46,4 @@
         ?>
     </body>
 </html>
+
