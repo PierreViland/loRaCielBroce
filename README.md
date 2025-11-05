@@ -11,6 +11,12 @@ Le dépôt **loRaCielBroce** propose un exemple de récupération de données de
 - **MQTT** : protocole de messagerie léger pour la transmission des données.
 - **Web** : interface utilisateur pour la visualisation des données.
 
+
+Le serveur Lora et broker MQTT utilisé est basé sur ce dépôt : 
+[https://github.com/chirpstack/chirpstack-docker](https://github.com/chirpstack/chirpstack-docker)
+
+
+
 ## Structure du dépôt
 
 Le dépôt contient plusieurs fichiers et dossiers, notamment :
@@ -19,3 +25,4 @@ Le dépôt contient plusieurs fichiers et dossiers, notamment :
 - **test02_communicationLora** : test de communication via LoRa.
 - **test03_ClientMQTT** : client MQTT pour l'envoi des données.
 - **test04_pageWeb** : interface web pour l'affichage des données.
+- **ServeurDocker** : contient le docker-compose.yml et les fichiers de conf pour le serveur LEMP
