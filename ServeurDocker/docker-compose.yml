@@ -1,0 +1,60 @@
+services:
+  nginx:
+    image: nginx:1.18
+    container_name: nginxPV
+    ports:
+      - "80:80"  # Port hôte : Port conteneur
+    volumes:
+      - ./src:/var/www/php  # Montage du répertoire src de l'hôte dans /var/www/php du conteneur
+      - ./.docker/nginx/conf.d/default.d:/etc/nginx/conf.d/default.conf  # Configuration personnalisée de Nginx
+    working_dir: /var/www/php  # Répertoire de travail
+    depends_on:
+      - php  # Dépend du service php
+    networks:
+      - mynet
+
+  # Service PHP
+  php:
+    image: php:8.1-fpm  # Utilise l'image "test_php" (assurez-vous qu'elle est correctement configurée)
+    container_name: phpPV
+    working_dir: /var/www/php  # Répertoire de travail
+    volumes:
+      - ./src:/var/www/php  # Montage du répertoire src de l'hôte dans /var/www/php du conteneur
+    depends_on:
+      - mysql  # Dépend du service MySQL
+    networks:
+      - mynet
+
+  # Service MySQL
+  mysql:
+    image: mysql/mysql-server:8.0
+    container_name: mysqlPV
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'  # Autorise la connexion de n'importe quel hôte
+    ports:
+      - "3306:3306"  # Port hôte : Port conteneur
+    volumes:
+      - ./mysqldata:/var/lib/mysql  # Connecte le volume mysqldata au répertoire de données de MySQL
+    networks:
+      - mynet
+
+  # Service PhpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    container_name: phpmyadminPV
+    ports:
+      - "8080:80"  # Port hôte : Port conteneur
+    environment:
+      PMA_HOST: mysql  # Hôte de la base de données MySQL
+      PMA_PORT: 3306  # Port de la base de données MySQL
+    networks:
+      - mynet
+
+volumes:
+  mysqldata:  # Définition du volume pour les données MySQL
+    driver: local
+
+networks:
+  mynet:  # Définition du réseau
+
