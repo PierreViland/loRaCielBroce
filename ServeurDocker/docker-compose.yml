@@ -15,7 +15,7 @@ services:
 
   # Service PHP
   php:
-    image: php:8.1-fpm  # Utilise l'image "test_php" (assurez-vous qu'elle est correctement configurée)
+    image: php_pv #php:8.1-fpm  # Utilise l'image créer ave le dockerfile ./docker/php/ (assurez-vous qu'elle est correctement configurée)
     container_name: phpPV
     working_dir: /var/www/php  # Répertoire de travail
     volumes:
@@ -44,7 +44,7 @@ services:
     image: phpmyadmin/phpmyadmin:5
     container_name: phpmyadminPV
     ports:
-      - "8080:80"  # Port hôte : Port conteneur
+      - "8181:80"  # Port hôte : Port conteneur
     environment:
       PMA_HOST: mysql  # Hôte de la base de données MySQL
       PMA_PORT: 3306  # Port de la base de données MySQL
