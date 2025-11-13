@@ -1,3 +1,18 @@
+<?php
+  $valid_username = '______________';
+  $valid_password = '______________';
+  if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])
+      || $_SERVER['PHP_AUTH_USER'] !== $valid_username
+      || $_SERVER['PHP_AUTH_PW'] !== $valid_password) {
+  
+      header('WWW-Authenticate: Basic realm="Accès restreint"');
+      header('HTTP/1.0 401 Unauthorized');
+      echo 'Authentification requise.';
+      exit;
+ }
+
+?>
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -46,4 +61,5 @@
         ?>
     </body>
 </html>
+
 
